@@ -1,13 +1,28 @@
 from distutils.log import debug
+from email.policy import default
 import os
+from unicodedata import name
 from flask import Flask, render_template, flash, request, redirect, url_for
 import pytest
+from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
 
 UPLOAD_FOLDER = './uploads'
 ALLOWED_EXTENSIONS = {'py'}
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///score_board'
+db = SQLAlchemy(app)
+
+
+class board(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False)
+    date_created = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return '<Submission %>' % self.id
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -17,6 +32,21 @@ def allowed_file(filename):
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
+
+        try:
+            board_name = request.form['name']
+            new_record = board(name=board_name)
+
+            try:
+                db.session.add(new_record)
+                db.session.commit()
+                return redirect('/')
+            except:
+                print("DB add issue")
+
+        except:
+            print("Not a record submission")    
+
         # check if the post request has the file part
         if 'file' not in request.files:
             flash('No file part')
@@ -37,7 +67,8 @@ def index():
             return render_template('correct.html')
         else:
             return render_template('wrong.html')
-    return render_template('index.html')
+    records = board.query.order_by(board.date_created).all()
+    return render_template('index.html', records=records)
 
 if __name__ == "__main__":
     app.run(debug=True)
