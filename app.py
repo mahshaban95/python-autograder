@@ -60,15 +60,17 @@ def index():
         file.save("./uploads/assignment.py")
         #result = int(os.popen('python3 ./uploads/assignment.py 1 2').read())
         try:
-            retcode = pytest.main()
+            #retcode = pytest.main()
+            #retcode = pytest.main(['--cache-clear', '-d --tx popen//python=python3.8',  'uploads/test_assignment1.py'])
+            result = os.popen('py.test --cache-clear uploads/test_assignment1.py').read()
         except:
             render_template('wrong.html') 
-        if retcode == 0:
-            return render_template('correct.html')
-        else:
+        if result.find('passed') == -1:
             return render_template('wrong.html')
+        else:
+            return render_template('correct.html')
     records = board.query.order_by(board.date_created).all()
     return render_template('index.html', records=records)
 
 if __name__ == "__main__":
-    app.run()
+    app.run(host='0.0.0.0')
