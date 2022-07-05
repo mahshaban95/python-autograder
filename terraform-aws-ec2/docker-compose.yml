@@ -1,0 +1,20 @@
+version: "3.7"
+services:
+  web:
+    image: mahshaban95/autograder:2.0
+    restart: always
+    ports:
+      - 5000:5000
+    networks:
+      - flask_network
+
+  proxy:
+    image: mahshaban95/proxy:1.0
+    restart: always
+    ports:
+      - 80:80
+    networks:
+      - flask_network
+
+networks:
+  flask_network:
