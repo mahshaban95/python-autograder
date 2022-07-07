@@ -51,3 +51,27 @@ resource "aws_ecs_task_definition" "autograder" {
   memory = 512
   cpu = 256
 }
+
+# Create and configure ECS service
+resource "aws_ecs_service" "autograder" {
+  name    = "autograder-service"
+  cluster = aws_ecs_cluster.autograder.id
+  task_definition = aws_ecs_task_definition.autograder.arn
+  launch_type = "FARGATE"
+  desired_count = 2
+  network_configuration {
+    subnets = ["${aws_default_subnet.default_subnet_a.id}", "${aws_default_subnet.default_subnet_b.id}"]
+    assign_public_ip = true
+  }
+}
+
+resource "aws_default_vpc" "default_vpc" {
+}
+
+resource "aws_default_subnet" "default_subnet_a" {
+  availability_zone = "us-west-2a"
+}
+
+resource "aws_default_subnet" "default_subnet_b" {
+  availability_zone = "us-west-2b"
+}
