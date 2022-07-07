@@ -21,3 +21,33 @@ resource "docker_image" "autograder" {
 provider "aws" {
   region = var.region
 }
+
+# Create AWS ECS Cluster
+resource "aws_ecs_cluster" "autograder" {
+  name = "autograder-cluster"
+}
+
+# Create and configure ECS task definition
+resource "aws_ecs_task_definition" "autograder" {
+  family = "autograder"
+  container_definitions = <<TASK_DEFINITION
+  [
+    {
+      "name": "autograder",
+      "image": "mahshaban95/autograder:2.0",
+      "portMappings": [
+        {
+          "containerPort": 5000,
+          "hostPort": 5000
+        }
+      ],
+      "memory": 512,
+      "cpu": 256
+    }
+  ]
+  TASK_DEFINITION
+  requires_compatibilities = ["FARGATE"]
+  network_mode = "awsvpc"
+  memory = 512
+  cpu = 256
+}
